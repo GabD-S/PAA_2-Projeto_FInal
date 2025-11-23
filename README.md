@@ -60,7 +60,7 @@ Para mantermos o código organizado e evitar conflitos, seguiremos estas regras:
 ---
 
 ### Dupla 3: Algoritmos e Otimização (Core PAA)
-**Responsáveis:** @UserGithub5, @UserGithub6
+**Responsáveis:** @GabD-S, @UserGithub6
 
 Responsáveis pela inteligência do sistema. [cite_start]Devem **implementar** os algoritmos de busca/otimização e realizar a análise de complexidade[cite: 12, 20].
 
