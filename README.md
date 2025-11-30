@@ -1,88 +1,113 @@
-# Projeto PAA - Sistema de Perguntas e Respostas (QA System)
+# SQLite RAG
 
-[cite_start]Este projeto visa desenvolver um sistema capaz de responder perguntas feitas em linguagem natural, utilizando algoritmos eficientes implementados pelo grupo, com foco na análise de complexidade[cite: 5, 12, 20].
+O **SQLite RAG** é um sistema de busca híbrida (Retrieval-Augmented Generation) leve e eficiente, construído sobre o SQLite. Ele combina o poder da pesquisa vetorial (usando embeddings) com a precisão da pesquisa textual tradicional (FTS5), tudo rodando localmente sem necessidade de servidores externos.
 
-## 🚀 Organização do Repositório
+## Como Funciona
 
-### Fluxo de Trabalho (Git Flow)
-Para mantermos o código organizado e evitar conflitos, seguiremos estas regras:
+O sistema utiliza uma abordagem híbrida para recuperar informações:
+1.  **Embeddings**: O texto é convertido em vetores numéricos usando o modelo **Embedding Gemma** (ou outros modelos GGUF). Isso permite encontrar trechos com significado semântico similar, mesmo que não usem as mesmas palavras.
+2.  **Full-Text Search (FTS5)**: Utiliza o índice de texto completo do SQLite para encontrar correspondências exatas de palavras-chave.
+3.  **Reciprocal Rank Fusion (RRF)**: Os resultados das duas buscas são combinados e reordenados para oferecer a melhor resposta possível.
 
-1.  **Branches:**
-    * `main`: Apenas código estável e pronto para entrega.
-    * `develop`: Branch de integração. Todos os Pull Requests (PRs) devem vir para cá.
-    * **Feature Branches:** Cada dupla ou tarefa deve criar uma branch separada a partir da `develop`.
-        * Padrão de nome: `feature/nome-da-tarefa` (ex: `feature/interface-web`, `feature/algoritmo-busca`).
+## Estrutura do Código
 
-2.  **Commits (Conventional Commits):**
-    Use mensagens claras e padronizadas:
-    * `feat:` para novas funcionalidades.
-    * `fix:` para correção de bugs.
-    * `docs:` para alterações na documentação.
-    * `refactor:` para melhorias de código que não mudam funcionalidade.
-    * *Exemplo:* `feat: adiciona endpoint de busca no backend`
+-   **`src/sqlite_rag/chunker.py`**: Responsável por dividir os documentos em pedaços menores (chunks) para processamento.
+-   **`src/sqlite_rag/engine.py`**: O núcleo do sistema, gerencia a lógica de busca híbrida e interação com o banco de dados.
+-   **`src/sqlite_rag/extractor.py`**: Extrai texto de diversos formatos de arquivo (PDF, DOCX, etc.).
+-   **`src/sqlite_rag/database.py`**: Gerencia a conexão e as operações no banco de dados SQLite.
+-   **`src/sqlite_rag/cli.py`**: Interface de linha de comando para interagir com o sistema.
 
----
+## Como Rodar
 
-## 🛠️ Divisão de Tarefas por Duplas
+### 1. Instalação
 
-### Dupla 1: Frontend e Interface Web
-**Responsáveis:** @UserGithub1, @UserGithub2
+Instale as dependências do sistema e o pacote Python:
 
-[cite_start]O objetivo é criar a interface onde o usuário interage com o sistema[cite: 10, 11].
+```bash
+sudo apt install build-essential python3-dev python3-venv libsqlite3-dev
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --break-system-packages -e .
+```
 
-* **Fase 1: Setup Inicial**
-    * Criar a estrutura básica do frontend (HTML/CSS/JS ou Framework escolhido).
-    * Configurar a conexão básica com o servidor (ex: definir a URL base da API).
-* **Fase 2: Layout e Input**
-    * Desenvolver a tela principal com caixa de texto para a pergunta.
-    * Criar a área de exibição da resposta retornada.
-* **Fase 3: Integração**
-    * Implementar a chamada assíncrona (fetch/axios) para o endpoint do backend.
-    * Tratar estados de "Carregando..." e erros de conexão.
+### 2. Baixar o Modelo
 
----
+Baixe o modelo de embeddings recomendado:
 
-### Dupla 2: Backend e Processamento de Dados
-**Responsáveis:** @UserGithub3, @UserGithub4
+```bash
+sqlite-rag download-model unsloth/embeddinggemma-300m-GGUF embeddinggemma-300M-Q8_0.gguf
+```
 
-[cite_start]Responsáveis pelo servidor, ingestão de dados e orquestração[cite: 8, 9, 11].
+### 3. Ingestão de Documentos
 
-* **Fase 1: Setup do Servidor**
-    * Configurar o ambiente (Python/Flask/FastAPI).
-    * Criar o endpoint principal (ex: `POST /api/ask`) que recebe o JSON com a pergunta.
-* **Fase 2: Leitura e Limpeza de Dados (ETL)**
-    * [cite_start]Implementar função para ler os arquivos de texto (base de conhecimento)[cite: 8].
-    * Aplicar pré-processamento: remover pontuação, *stop words* e normalizar texto (tudo minúsculo).
-* **Fase 3: Conexão com o Core**
-    * Receber a pergunta limpa e passar para o módulo da Dupla 3.
-    * Receber a resposta processada e devolver para o Frontend em formato JSON.
+Coloque seus arquivos (PDF, TXT, etc.) em uma pasta (ex: `docs/`) e execute:
 
----
+```bash
+python -m sqlite_rag.cli add docs/ --recursive
+```
 
-### Dupla 3: Algoritmos e Otimização (Core PAA)
-**Responsáveis:** @GabD-S, @UserGithub6
+### 4. Realizar Busca
 
-Responsáveis pela inteligência do sistema. [cite_start]Devem **implementar** os algoritmos de busca/otimização e realizar a análise de complexidade[cite: 12, 20].
+Para buscar informações na base indexada:
 
-* **Fase 1: Pesquisa e Definição**
-    * Definir qual algoritmo será implementado (ex: TF-IDF, Similaridade de Cosseno, Bag of Words).
-    * Esboçar a estrutura de dados para indexação.
-* **Fase 2: Implementação da Indexação (Treinamento)**
-    * [cite_start]Criar função que transforma os textos da base em vetores ou índices[cite: 9].
-    * *Nota:* O código deve ser autoral para fins de avaliação da disciplina.
-* **Fase 3: Implementação da Busca**
-    * Criar função que compara a pergunta do usuário com a base indexada e retorna a melhor resposta.
-* **Fase 4: Análise de Complexidade**
-    * Documentar a complexidade de tempo e espaço (Big O) dos algoritmos criados.
-    * [cite_start]Gerar gráficos ou tabelas comparativas para o relatório final[cite: 23].
+```bash
+python -m sqlite_rag.cli search "sua pergunta" --limit 5
+```
 
----
+## Exemplo de Uso
 
-## 📄 Documentação e Entrega
+**Pergunta:**
+`"receita de bolo"`
 
-[cite_start]O relatório final deve ser um PDF contendo[cite: 23]:
-1.  Descrição dos algoritmos utilizados.
-2.  Análise detalhada da complexidade.
-3.  Instruções de como rodar o projeto.
+**Comando:**
+```bash
+python -m sqlite_rag.cli search "receita de bolo" --limit 5
+```
 
-**Importante:** Mantenham o código comentado, especialmente nas funções complexas da Dupla 3, para facilitar a escrita do relatório final.
+**Saída do Código:**
+
+```text
+Database: /home/gabriel_pc/Área de trabalho/UNB/Jan_materias/PAA/sqlite-rag/sqliterag.sqlite
+━━━ Search Results (5 matches) ━━━
+
+┌─ Result #1 ──────────────────────────────────────────────────────────────────
+│ 📕 ...UNB/Jan_materias/PAA/sqlite-rag/docs/volta-mundo-120-receitas-vol2.pdf│
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Jambalaya de frutos do m a                                                  │
+│ r................................................... [...] Torta de maçã    │
+│ [Applepie)....................................................... Torta de  │
+│ limão (Lemon pie).....................................................      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ Result #2 ──────────────────────────────────────────────────────────────────
+│ 📕 ...UNB/Jan_materias/PAA/sqlite-rag/docs/volta-mundo-120-receitas-vol2.pdf│
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Arroz com ervilhas (Risi i bisi).......................................     │
+│ [...] Bacalhau cremoso (Baccalà mantegato)........................ [...]    │
+│ Torta de trigo com frutas cristalizadas (Pastieradigrano)                   │
+│ Zabaione.......................................                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ Result #3 ──────────────────────────────────────────────────────────────────
+│ 📕 ...UNB/Jan_materias/PAA/sqlite-rag/docs/volta-mundo-120-receitas-vol2.pdf│
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Ingredientes - recheio [...] Modo de fazer - recheio [...] Unte com a       │
+│ manteiga as formas de empadinhas.                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ Result #4 ──────────────────────────────────────────────────────────────────
+│ 📕 ...UNB/Jan_materias/PAA/sqlite-rag/docs/volta-mundo-120-receitas-vol2.pdf│
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Ingredientes e utensílio - bolo [...] Modo de fazer - bolo [...] C ubra,    │
+│ então, o bolo com a cobertura de chocolate.                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ Result #5 ──────────────────────────────────────────────────────────────────
+│ 📕 ...UNB/Jan_materias/PAA/sqlite-rag/docs/volta-mundo-120-receitas-vol2.pdf│
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Faça uma cova no centro da farinha e coloque as gemas e a manteiga. Amasse  │
+│ com as pontas dos dedos c vá juntando leite, até formar uma massa lisa e    │
+│ com boa consistência para sei aberta com rolo. [...] Esquente a manteiga    │
+│ com o óleo numa panela r i ande.                                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
